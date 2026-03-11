@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RGB Color Viewer</title>
+
+<style>
+*{box-sizing:border-box}
+html,body{
+margin:0;
+width:100%;
+height:100%;
+font-family:Arial,sans-serif;
+}
+
+body{
+background:rgb(128,128,128);
+transition:background 0.1s ease;
+overflow:hidden;
+}
+
+.panel{
+max-width:520px;
+margin:24px auto;
+padding:20px;
+border-radius:20px;
+background:rgba(255,255,255,0.18);
+backdrop-filter:blur(8px);
+box-shadow:0 8px 24px rgba(0,0,0,0.15);
+}
+
+.panel.hidden{
+display:none;
+}
+
+h1{
+margin-top:0;
+margin-bottom:8px;
+font-size:28px;
+}
+
+.row{
+margin-bottom:16px;
+}
+
+.label-line{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:8px;
+font-weight:bold;
+}
+
+.controls{
+display:grid;
+grid-template-columns:1fr 88px;
+gap:12px;
+align-items:center;
+}
+
+input[type=range]{width:100%}
+
+input[type=number]{
+width:100%;
+padding:10px;
+border-radius:12px;
+border:1px solid rgba(0,0,0,0.15);
+font-size:16px;
+}
+
+.buttons{
+display:flex;
+gap:12px;
+margin-top:16px;
+flex-wrap:wrap;
+}
+
+button{
+padding:12px 16px;
+border:0;
+border-radius:12px;
+font-size:15px;
+cursor:pointer;
+}
+
+.show-toggle{
+position:fixed;
+left:10px;
+top:10px;
+width:44px;
+height:44px;
+border-radius:12px;
+display:flex;
+align-items:center;
+justify-content:center;
+background:rgba(255,255,255,0.22);
+backdrop-filter:blur(8px);
+box-shadow:0 6px 18px rgba(0,0,0,0.15);
+font-size:20px;
+cursor:pointer;
+z-index:1000;
+opacity:0;
+pointer-events:none;
+transition:opacity 0.15s ease;
+}
+
+.show-toggle.visible{
+opacity:1;
+pointer-events:auto;
+}
+</style>
+</head>
+
+<body>
+
+<div class="show-toggle" id="showToggle">☰</div>
+
+<div class="panel" id="panel">
+
+<h1>RGB Color Viewer</h1>
+<p>RGB 값을 입력하면 해당 색상이 전체 화면에 표시됩니다.</p>
+
+<div class="row">
+<div class="label-line"><span>R</span><span id="rValue">128</span></div>
+<div class="controls">
+<input id="rRange" type="range" min="0" max="255" value="128">
+<input id="rInput" type="number" min="0" max="255" value="128">
+</div>
+</div>
+
+<div class="row">
+<div class="label-line"><span>G</span><span id="gValue">128</span></div>
+<div class="controls">
+<input id="gRange" type="range" min="0" max="255" value="128">
+<input id="gInput" type="number" min="0" max="255" value="128">
+</div>
+</div>
+
+<div class="row">
+<div class="label-line"><span>B</span><span id="bValue">128</span></div>
+<div class="controls">
+<input id="bRange" type="range" min="0" max="255" value="128">
+<input id="bInput" type="number" min="0" max="255" value="128">
+</div>
+</div>
+
+<div class="buttons">
+<button id="resetBtn">초기화</button>
+<button id="fullscreenBtn">전체화면</button>
+<button id="hideBtn">입력 박스 숨기기</button>
+</div>
+
+</div>
+
+<script>
+
+const ids={
+rRange:document.getElementById("rRange"),
+gRange:document.getElementById("gRange"),
+bRange:document.getElementById("bRange"),
+rInput:document.getElementById("rInput"),
+gInput:document.getElementById("gInput"),
+bInput:document.getElementById("bInput"),
+rValue:document.getElementById("rValue"),
+gValue:document.getElementById("gValue"),
+bValue:document.getElementById("bValue"),
+panel:document.getElementById("panel"),
+hideBtn:document.getElementById("hideBtn"),
+showToggle:document.getElementById("showToggle"),
+resetBtn:document.getElementById("resetBtn"),
+fullscreenBtn:document.getElementById("fullscreenBtn")
+}
+
+function clamp(v){
+let n=Number(v)
+if(Number.isNaN(n)) return 0
+return Math.max(0,Math.min(255,Math.round(n)))
+}
+
+function update(r,g,b){
+
+r=clamp(r)
+g=clamp(g)
+b=clamp(b)
+
+ids.rRange.value=r
+ids.gRange.value=g
+ids.bRange.value=b
+
+ids.rInput.value=r
+ids.gInput.value=g
+ids.bInput.value=b
+
+ids.rValue.textContent=r
+ids.gValue.textContent=g
+ids.bValue.textContent=b
+
+document.body.style.background="rgb("+r+","+g+","+b+")"
+
+const brightness=(r*0.299+g*0.587+b*0.114)
+const textColor=brightness<128?"#fff":"#111"
+
+document.body.style.color=textColor
+ids.panel.style.color=textColor
+ids.showToggle.style.color=textColor
+
+}
+
+function current(){
+return{
+r:clamp(ids.rInput.value),
+g:clamp(ids.gInput.value),
+b:clamp(ids.bInput.value)
+}
+}
+
+ids.rRange.oninput=()=>update(ids.rRange.value,ids.gRange.value,ids.bRange.value)
+ids.gRange.oninput=()=>update(ids.rRange.value,ids.gRange.value,ids.bRange.value)
+ids.bRange.oninput=()=>update(ids.rRange.value,ids.gRange.value,ids.bRange.value)
+
+ids.rInput.oninput=()=>{let v=current();update(v.r,v.g,v.b)}
+ids.gInput.oninput=()=>{let v=current();update(v.r,v.g,v.b)}
+ids.bInput.oninput=()=>{let v=current();update(v.r,v.g,v.b)}
+
+ids.resetBtn.onclick=()=>update(128,128,128)
+
+function hidePanel(){
+ids.panel.classList.add("hidden")
+ids.showToggle.classList.add("visible")
+}
+
+function showPanel(){
+ids.panel.classList.remove("hidden")
+ids.showToggle.classList.remove("visible")
+}
+
+ids.hideBtn.onclick=hidePanel
+ids.showToggle.onclick=showPanel
+
+ids.fullscreenBtn.onclick=async()=>{
+try{
+if(!document.fullscreenElement){
+await document.documentElement.requestFullscreen()
+}else{
+await document.exitFullscreen()
+}
+}catch(e){}
+}
+
+update(128,128,128)
+
+</script>
+
+</body>
+</html>
